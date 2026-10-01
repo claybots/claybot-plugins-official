@@ -185,6 +185,17 @@
       "homepage": "https://github.com/agentic-wf/claybot-templates/tree/main/migration-checker"
     },
     {
+      "name": "cloudflare-sdlc-expert",
+      "source": "./cloudflare-sdlc-expert/plugin",
+      "description": "Builds, tests and ships Cloudflare Workers with the cf CLI: cloudflare.config.ts bindings, Wrangler migrations, a preview and check on every pull request, and production deploys only after sign-off.",
+      "strict": false,
+      "category": "deployment",
+      "author": {
+        "name": "claybots"
+      },
+      "homepage": "https://github.com/agentic-wf/claybot-templates/tree/main/cloudflare-sdlc-expert"
+    },
+    {
       "name": "repo-digest",
       "source": "./repo-digest/plugin",
       "description": "A de-noised digest of what merged on a branch since the last one, grouped by impact, with migrations, config, CI, and dependency risks called out.",

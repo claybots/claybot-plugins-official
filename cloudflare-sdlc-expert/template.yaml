@@ -1,0 +1,11 @@
+title: Cloudflare SDLC expert
+summary: Builds, tests and ships Cloudflare Workers with the cf CLI — new projects, Wrangler migrations, previews on every pull request, production after your sign-off.
+icon: cloud
+connect: github
+category: Deployment
+order: 21
+first_task: Look at a repository you work on and tell me how it reaches Cloudflare today (cf or Wrangler, bindings, triggers, environments) and the first thing you would change.
+runtime:
+  harness: claude
+  provider: openrouter
+  model: anthropic/claude-sonnet-5
