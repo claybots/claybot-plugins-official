@@ -581,6 +581,49 @@ app(
 The sign-off in step 4 is still Claybot's release card. {FALLBACK.format(tool="app_release_scope")}""",
 )
 
+app(
+    template="cloudflare-sdlc-expert", skill="ship-on-cloudflare", name="production-deploy", title="Production deploy",
+    description="Use at step 7.3, as the sign-off before a production deploy: shows the owner the worker, commit and preview, the checklist, each resource and data change with its risk, what ships, and the config diff, lets them hold back resource changes, and returns whether to deploy, keep it on preview, or stop.",
+    mode="gate", comments=True,
+    input=O({
+        "title": S("<worker> → <mode>."),
+        "repo": S(),
+        "commit": S("The short sha being deployed."),
+        "mode": S("The --mode the config is evaluated with."),
+        "preview_url": S("The preview deployment of the same code."),
+        "checks": A(O({"name": S(), "status": S("pass, fail, warn or pending."), "url": S(), "detail": S()}, ["name"]), "The deploy checklist, one row per item."),
+        "notes": S("What ships, for users, and the rollback plan with the version now live, Markdown."),
+        "resources": A(O({
+            "id": S("Stable id, echoed back in values.hold."),
+            "title": S("The binding and resource, e.g. DATABASE → example-production-database."),
+            "kind": S("d1, kv, r2, queue, vectorize, route, cron, secret, migration or other."),
+            "action": S("added, changed or removed."),
+            "risk": S("high, medium or low."),
+            "detail": S("One line: what happens when it is applied."),
+        }, ["id", "title"]), "Every production resource, route, trigger and D1 migration the deploy creates or changes."),
+        "files": A(FILE, "The diff of cloudflare.config.ts and migrations since the version now live, at most 10."),
+    }, ["title", "commit", "checks"]),
+    actions=[
+        {"id": "deploy", "label": "Deploy to production", "tone": "primary"},
+        {"id": "keep_preview", "label": "Keep it on preview", "tone": "neutral", "note": "optional"},
+        {"id": "stop", "label": "Don't deploy", "tone": "danger", "note": "optional"},
+    ],
+    sections=[
+        {"type": "header", "link": "preview_url", "meta": ["repo", "commit", "mode"]},
+        {"type": "checks", "key": "checks", "label": "Checklist"},
+        {"type": "markdown", "key": "notes", "label": "What ships", "comment": True, "path": "notes"},
+        {"type": "items", "key": "resources", "field": "hold", "label": "Resource changes", "chips": ["action", "risk"], "meta": ["kind"], "body": "detail", "noun": "held back", "hint": "Tick a change that must not be applied in this deploy.", "comment": True, "target": "resource", "empty": "No resource, route or data changes."},
+        {"type": "diffs", "key": "files", "label": "Config changes"},
+    ],
+    card=f"""{OFFERED.format(tool="app_production_deploy")}, this card is the sign-off in step 7.3: call `app_production_deploy` with `<worker> → <mode>` as `title`, `repo`, `commit`, `mode`, the `preview_url`, the checklist as `checks` (✅ pass, ⚠️ warn, ❌ fail, with the detail), `notes` (what ships and the rollback plan), every production `resources` change (`id`, `title`, `kind`, `action`, `risk`, `detail`) and the `files` diff of the config and migrations. Never call it with a ❌ in the checklist. It waits for the owner (up to 15 minutes). `values.hold` is a JSON array of the resource ids the owner says must not be applied. {COMMENTS.format(targets="A target is `notes:L<line>`, `path:line` in a diff, or `resource <id>`.")}
+- `deploy` with nothing held — that is the sign-off for this worker, mode and commit: go on to step 7.4. Apply the comments only if they need no code change; otherwise stop and say what they ask.
+- `deploy` with changes held — a deploy cannot leave a resource change out: stop, say which held changes the code depends on, and propose the change without them back on the branch (steps 3 to 6).
+- `keep_preview` — do not deploy; reply with the preview URL, the note and the comments.
+- `stop` — do not deploy; reply with the note.
+
+A sign-off is good for that commit only: if the commit moves before you deploy, call the card again. {FALLBACK.format(tool="app_production_deploy")} Without the card the sign-off is still required, in words as step 7.3 says.""",
+)
+
 # ---- Automation ------------------------------------------------------------------
 
 app(
